@@ -53,9 +53,41 @@ app.get("/products", async (req, res) => {
     res.send(produtos).status(201);
   }
   catch (error) {
-    console.log("Erro ao conectar MongoDB");
+    console.log("Erro ao obter os produtos");
     console.log("erro",error);
   }
+});
+
+app.get("/products/:id", async (req, res) => {
+  const {id} = req.params;
+  try {
+    const procuraProduto = await db.collection("livros").findOne({_id: new ObjectId(id)});
+    if (!procuraProduto) return res.sendStatus(401);
+    else res.send(procuraProduto).status(200);
+  }
+  catch (error) {
+    console.log("Erro ao obter um produto específico");
+    console.log("erro",error);
+  }
+})
+
+app.post("/carrinho", async (req,res) => {
+  const {titulo, imagem, preco, id} = req.body;
+  const produtoEscolhido = {
+    titulo,
+    imagem,
+    preco,
+    id
+  }
+  try {
+    await db.collection("carrinho").insertOne(produtoEscolhido);
+    console.log(chalk.bold.blue("Produto salvo no carrinho"));
+  }
+  catch (error) {
+    console.log("Erro ao enviar o produto pro carrinho");
+    console.log("erro",error);
+  }
+  res.sendStatus(201);
 });
 
 const port = process.env.PORT || 5000;
