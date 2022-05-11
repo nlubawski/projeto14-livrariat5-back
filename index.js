@@ -47,6 +47,17 @@ app.post("/cadastrar", async (req, res) => {
   }
 
   try {
+    const cliente = await db.collection("clientes").findOne({email})
+    if (cliente){
+        console.log("ja cadastrado")
+        res.sendStatus(400);
+        return;
+    }
+  } catch (error) {
+    
+  }
+
+  try {
     const SALT = 10;
     const passwordHash = bcrypt.hashSync(password, SALT);
     
