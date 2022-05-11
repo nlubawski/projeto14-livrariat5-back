@@ -23,6 +23,8 @@ try {
 
 //aqui vai ser o post
 
+// Implementar feature de produtos
+
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
   console.log(`Servidor ok na porta ${port}`)
