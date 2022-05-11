@@ -59,6 +59,9 @@ app.get("/products", async (req, res) => {
 });
 
 app.get("/products/:id", async (req, res) => {
+  // O front end precisa mandar esse id corretamente
+  // A ideia dessa página é mostrar os produtos com mais detalhes e o preço
+  // Nessa rota também vai ter a opção de add no carrinho
   const {id} = req.params;
   try {
     const procuraProduto = await db.collection("livros").findOne({_id: new ObjectId(id)});
