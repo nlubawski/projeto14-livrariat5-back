@@ -10,7 +10,6 @@ app.use(cors());
 app.use(json());
 dotenv.config();
 
-
 let db = null;
 const mongoClient = new MongoClient(process.env.MONGO_URL)
 
