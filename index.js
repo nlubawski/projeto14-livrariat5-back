@@ -101,9 +101,6 @@ app.get("/products", async (req, res) => {
 });
 
 app.get("/products/:id", async (req, res) => {
-  // O front end precisa mandar esse id corretamente
-  // A ideia dessa página é mostrar os produtos com mais detalhes e o preço
-  // Nessa rota também vai ter a opção de add no carrinho
   const {id} = req.params;
   try {
     const procuraProduto = await db.collection("livros").findOne({_id: new ObjectId(id)});
@@ -117,21 +114,21 @@ app.get("/products/:id", async (req, res) => {
 })
 
 app.post("/carrinho", async (req,res) => {
-  const {title, price, id} = req.body;
-  const produtoEscolhido = {
+  const {title, author, price} = req.body;
+  const livroCarrinho = {
     title,
-    price,
-    id
+    author,
+    price
   }
   try {
-    await db.collection("carrinho").insertOne(produtoEscolhido);
+    await db.collection("carrinho").insertOne(livroCarrinho);
     console.log(chalk.bold.blue("Produto salvo no carrinho"));
+    res.send("Livro salvo no carrinho").status(201);
   }
   catch (error) {
     console.log("Erro ao enviar o produto pro carrinho");
     console.log("erro",error);
   }
-  res.sendStatus(201);
 });
 
 const port = process.env.PORT || 5000;
