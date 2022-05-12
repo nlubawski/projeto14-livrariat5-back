@@ -10,10 +10,6 @@ app.use(json());
 app.use(cors());
 dotenv.config();
 
-/* url do mongo para deploy
-MONGO_URL=mongodb+srv://projetao:ljwIFCV7qVYWxuTU@livrariat5.d682m.mongodb.net/projetao14?retryWrites=true&w=majority
-*/
-
 let db = null;
 const mongoClient = new MongoClient(process.env.MONGO_URL)
 
@@ -28,28 +24,23 @@ try {
 
 //aqui vai ser o post
 
-const livros = [
-  {titulo: "titulo1", imagem: "imagem1", preco: "preço1", id: 1},
-  {titulo: "titulo2", imagem: "imagem2", preco: "preço2", id: 2},
-  {titulo: "titulo3", imagem: "imagem3", preco: "preço3", id: 3},
-  {titulo: "titulo4", imagem: "imagem4", preco: "preço4", id: 4},
-  {titulo: "titulo5", imagem: "imagem5", preco: "preço5", id: 5},
-];
+// const livros = [
+//   {title: "Os segredos da mente milionária", author:"T.Harv Eker",  price: "R$39,90", id: 1, 
+//   description:`Se as suas finanças andam na corda bamba, talvez esteja na hora de você refletir sobre o que T. Harv Eker chama de "o seu modelo de dinheiro" – um conjunto de crenças que cada um de nós alimenta desde a infância e que molda o nosso destino financeiro, quase sempre nos levando para uma situação difícil. Neste livro, Eker mostra como substituir uma mentalidade destrutiva – que você talvez nem perceba que tem – pelos "arquivos de riqueza", 17 modos de pensar e agir que distinguem os ricos das demais pessoas.`,
+//   image: "",
+// },
+// ];
 
-// Comandos usados para criar o banco de dados de livros
-
-  // try {
-  //   livros.forEach(livro => {
-  //     db.collection("livros").insertOne(livro);
-  //     console.log("Salvou o livro no banco");
-  //   })
-  //   res.send("Livros salvos no banco").status(201);
-  // }
 
 app.get("/products", async (req, res) => {
   try {
+    // Comandos usados para criar o banco de dados de livros
+    // livros.forEach(livro => {
+    //   db.collection("livros").insertOne(livro);
+    //   console.log("Salvou o livro no banco");
+    // })
+    // res.send("Livros salvos no banco").status(201);
     const produtos = await db.collection("livros").find().toArray();
-    console.log(chalk.bold.green(produtos));
     res.send(produtos).status(201);
   }
   catch (error) {
@@ -75,11 +66,10 @@ app.get("/products/:id", async (req, res) => {
 })
 
 app.post("/carrinho", async (req,res) => {
-  const {titulo, imagem, preco, id} = req.body;
+  const {title, price, id} = req.body;
   const produtoEscolhido = {
-    titulo,
-    imagem,
-    preco,
+    title,
+    price,
     id
   }
   try {
