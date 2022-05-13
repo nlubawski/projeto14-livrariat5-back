@@ -200,6 +200,19 @@ app.get("/checkout", async (req, res) => {
   }
 });
 
+app.post("/address", async (req,res) => {
+  const { destinatario, rua, bairro, cep } = req.body;
+  try {
+    await db.collection("enderecos").insertOne(req.body);
+    console.log(chalk.bold.blue("Endereço salvo no banco"));
+    res.send("Endereço salvo no banco").status(201);
+  }
+  catch (error) {
+    console.log("Erro ao enviar o produto pro carrinho");
+    console.log("erro", error);
+  }
+})
+
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
   console.log(`Servidor ok na porta ${port}`)
