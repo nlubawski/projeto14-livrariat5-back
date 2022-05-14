@@ -214,23 +214,22 @@ app.post("/address", async (req,res) => {
 })
 
 app.get("/address", async (req,res) => {
-  // const { authorization } = req.headers;
-  // const token = authorization?.replace('Bearer', '').trim();
-  // // 1a validação: Verifica se o token é válido
-  // if (!token) return res.send("Token inexistente").status(401);
-  // else console.log("Passou na primeira validação");
+  const { authorization, id } = req.headers;
+  const token = authorization?.replace('Bearer', '').trim();
+  // 1a validação: Verifica se o token é válido
+  if (!token) return res.send("Token inexistente").status(401);
+  else console.log("Passou na primeira validação");
   try {
-  //   // 2a validação: Verifica se o token existe na coleção dos tokens
-  //   const session = await db.collection("sessions").findOne({ token })
-  //   if (!session) return res.sendStatus(401);
-  //   else console.log("Passou na segunda validação")
+    // 2a validação: Verifica se o token existe na coleção dos tokens
+    const session = await db.collection("sessions").findOne({ token })
+    if (!session) return res.sendStatus(401);
+    else console.log("Passou na segunda validação")
 
-  //   // 3a validação: Busca os dados do usuário associado ao token na coleção de informações
-  //   const user = await db.collection("clientes").findOne({ _id: session.clienteId });
-  //   if (!user) res.sendStatus(404);
-  //   else console.log("Passou na terceira validação");
+    // 3a validação: Busca os dados do usuário associado ao token na coleção de informações
+    const user = await db.collection("clientes").findOne({ _id: session.clienteId });
+    if (!user) res.sendStatus(404);
+    else console.log("Passou na terceira validação");
 
-    const {id} = req.body;
     console.log(id);
 
     const endereços = await db.collection("enderecos").find({id: id}).toArray();
@@ -242,6 +241,12 @@ app.get("/address", async (req,res) => {
     res.status(500).send(chalk.red.bold("Falha na obtenção dos endereços"))
   }
   
+})
+
+app.delete("/address/:id", async (req,res) => {
+  const {id} = req.params;
+  await db.collection("enderecos").deleteOne({ _id: new ObjectId(id) })
+  res.send("Deletado com sucesso").status(200);
 })
 
 const port = process.env.PORT || 5000;
