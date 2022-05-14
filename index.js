@@ -172,6 +172,35 @@ app.post("/carrinho", async (req, res) => {
   }
 });
 
+/* Talvez trocar a rota, pois depois que o carrinho passar pra frente as informações
+o checkout pode criar um novo banco */
+
+app.get("/carrinho", async (req,res) => {
+  // const {id} = req.params;
+  // Receber por params o id do usuário para mostrar apenas seus livros
+  try {
+    // Aqui trocar depois pela coleção do carrinho
+    const livros = await db.collection("livros").find().toArray();
+    res.send(livros).status(200);
+  }
+  catch (error) {
+    console.error(error);
+    res.status(500).send(chalk.red.bold("Falha na remoção do endereço"))
+  }
+})
+
+app.delete("/carrinho/:id", async (req, res) => {
+  const {id} = req.params;
+  try {
+    await db.collection("carrinho").deleteOne({ _id: new ObjectId(id) })
+    res.send("Livro deletado com sucesso do carrinho").status(200);
+  }
+  catch (error) {
+    console.error(error);
+    res.status(500).send(chalk.red.bold("Falha na remoção do endereço"))
+  }
+})
+
 app.get("/checkout", async (req, res) => {
   const { authorization } = req.headers;
   const token = authorization?.replace('Bearer', '').trim();
@@ -244,9 +273,21 @@ app.get("/address", async (req,res) => {
 })
 
 app.delete("/address/:id", async (req,res) => {
+  /* No front end, ele passa o id do endereço clicado pela rota, dai nessa parte do back
+  ele recebe o id pelo req.params, e eu uso esse id pra deletar o item que eu quero 
+  do banco de dados.
+  Pra deletar itens do carrinho é o mesmo princípio, vc precisa mandar pelo front
+   o id gerado pelo mongodb pro seu app.delete. */
   const {id} = req.params;
-  await db.collection("enderecos").deleteOne({ _id: new ObjectId(id) })
-  res.send("Deletado com sucesso").status(200);
+  try {
+    await db.collection("enderecos").deleteOne({ _id: new ObjectId(id) })
+    res.send("Deletado com sucesso").status(200);
+  }
+  catch (error) {
+    console.error(error);
+    res.status(500).send(chalk.red.bold("Falha na remoção do endereço"))
+  }
+
 })
 
 const port = process.env.PORT || 5000;
