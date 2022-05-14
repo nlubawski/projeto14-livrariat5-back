@@ -104,7 +104,7 @@ app.post("/login", async (req, res) => {
     if (cliente && bcrypt.compareSync(password, cliente.password)) {
       const token = uuid();
       await db.collection("sessions").insertOne({ token, clienteId: cliente._id });
-      return res.send({ token, name: cliente.name });
+      return res.send({ token, name: cliente.name, clienteId:cliente._id });
     }
     return res.sendStatus(404);
 
@@ -211,6 +211,37 @@ app.post("/address", async (req,res) => {
     console.log("Erro ao enviar o produto pro carrinho");
     console.log("erro", error);
   }
+})
+
+app.get("/address", async (req,res) => {
+  // const { authorization } = req.headers;
+  // const token = authorization?.replace('Bearer', '').trim();
+  // // 1a validação: Verifica se o token é válido
+  // if (!token) return res.send("Token inexistente").status(401);
+  // else console.log("Passou na primeira validação");
+  try {
+  //   // 2a validação: Verifica se o token existe na coleção dos tokens
+  //   const session = await db.collection("sessions").findOne({ token })
+  //   if (!session) return res.sendStatus(401);
+  //   else console.log("Passou na segunda validação")
+
+  //   // 3a validação: Busca os dados do usuário associado ao token na coleção de informações
+  //   const user = await db.collection("clientes").findOne({ _id: session.clienteId });
+  //   if (!user) res.sendStatus(404);
+  //   else console.log("Passou na terceira validação");
+
+    const {id} = req.body;
+    console.log(id);
+
+    const endereços = await db.collection("enderecos").find({id: id}).toArray();
+    res.send(endereços).status(200);
+  }
+
+  catch (error) {
+    console.error(error);
+    res.status(500).send(chalk.red.bold("Falha na obtenção dos endereços"))
+  }
+  
 })
 
 const port = process.env.PORT || 5000;
