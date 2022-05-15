@@ -217,11 +217,7 @@ app.post("/finalizar", async (req, res) => {
   const {authorization} = req.headers;
   const token = authorization?.replace("Bearer", "").trim();
   const {id} = req.body;
-    
-  if(!token || token === null) {
-    alert("Faça Login ou Cadastre-se!")
-  }
-
+  console.log(token)  
   try {
     const session = await db.collection("sessions").findOne({ token });
     if (!session) return res.sendStatus(401);
