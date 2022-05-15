@@ -9,6 +9,7 @@ import bcrypt from "bcrypt";
 import db from "./db.js"
 import productsRouter from "./Routes/productsRouters.js"
 import authRouters from "./Routes/authRouters.js";
+import carrinhoRouters from "./Routes/carrinhoRouters.js";
 
 const app = express();
 app.use(cors());
@@ -16,64 +17,10 @@ app.use(json());
 dotenv.config();
 
 app.use(productsRouter);
-
 app.use(authRouters)
+app.use(carrinhoRouters)
 
-app.post("/carrinho", async (req, res) => {
-  try {
-    await db.collection("carrinho").insertOne(req.body);
-    console.log(chalk.bold.blue("Produto salvo no carrinho"));
-    res.send("Livro salvo no carrinho").status(201);
-  }
-  catch (error) {
-    console.log("Erro ao enviar o produto pro carrinho");
-    console.log("erro", error);
-  }
-});
 
-app.get("/carrinho", async (req,res) => {
-  const { authorization, id } = req.headers;
-  const token = authorization?.replace('Bearer', '').trim();
-  // 1a validação: Verifica se o token é válido
-  if (!token) return res.send("Token inexistente").status(401);
-  else console.log("Passou na primeira validação");
-  try {
-    // 2a validação: Verifica se o token existe na coleção dos tokens
-    const session = await db.collection("sessions").findOne({ token })
-    if (!session) return res.sendStatus(401);
-    else console.log("Passou na segunda validação")
-
-    // 3a validação: Busca os dados do usuário associado ao token na coleção de informações
-    const user = await db.collection("clientes").findOne({ _id: session.clienteId });
-    if (!user) res.sendStatus(404);
-    else {
-      console.log("Passou na terceira validação");
-    }
-    const livros = await db.collection("carrinho").find({ id: id }).toArray();
-    res.send(livros).status(200);
-  }
-    
-  // const {id} = req.params;
-  // Receber por params o id do usuário para mostrar apenas seus livros
-  // Aqui trocar depois pela coleção do carrinho
-
-  catch (error) {
-    console.error(error);
-    res.status(500).send(chalk.red.bold("Falha na remoção do endereço"))
-  }
-})
-
-app.delete("/carrinho/:id", async (req, res) => {
-  const {id} = req.params;
-  try {
-    await db.collection("carrinho").deleteOne({ _id: new ObjectId(id) })
-    res.send("Livro deletado com sucesso do carrinho").status(200);
-  }
-  catch (error) {
-    console.error(error);
-    res.status(500).send(chalk.red.bold("Falha na remoção do livro do carrinho"))
-  }
-})
 
 app.get("/checkout", async (req, res) => {
   const { authorization } = req.headers;
