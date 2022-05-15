@@ -180,7 +180,7 @@ app.get("/carrinho", async (req,res) => {
   // Receber por params o id do usuário para mostrar apenas seus livros
   try {
     // Aqui trocar depois pela coleção do carrinho
-    const livros = await db.collection("livros").find().toArray();
+    const livros = await db.collection("carrinho").find().toArray();
     res.send(livros).status(200);
   }
   catch (error) {
@@ -200,6 +200,50 @@ app.delete("/carrinho/:id", async (req, res) => {
     res.status(500).send(chalk.red.bold("Falha na remoção do endereço"))
   }
 })
+
+app.get("/carrinho", async (req,res) => {
+  try {
+    const carrinho = await db.collection("carrinho").find().toArray();
+    console.log(chalk.bold.blue("Produtos achados no carrinho"));
+    res.send(carrinho).status(201);
+  }
+  catch (error) {
+    console.log("Erro no get/carrinho");
+    console.log("erro",error);
+  }
+});
+
+app.post("/finalizar", async (req, res) => {
+  const {authorization} = req.headers;
+  const token = authorization?.replace("Bearer", "").trim();
+  const {id} = req.body;
+  console.log(token)  
+  try {
+    const session = await db.collection("sessions").findOne({ token });
+    if (!session) return res.sendStatus(401);
+    else console.log("Passou na segunda validação")
+
+    const cliente = await db.collection("clientes").findOne({id});
+    if(!cliente) return res.status(401).send("Cliente não encontrado");   
+    console.log(cliente)
+
+    const clienteTESTE = await db.collection("clientes").findOne({_id: session.clienteId});
+    const livros = await db.collection("carrinho").find().toArray();
+    const {name, email, _id } = {clienteTESTE};
+    await db.collection("finalizadas").insertOne({
+      name, 
+      email,
+      cliente,
+      livros,      
+    })
+    return res.sendStatus(201);
+    } catch (error) {
+      console.log("Erro ao tentar obter usuário através da sessão");
+      console.log(error);
+      return res.sendStatus(500);
+    }
+
+  })
 
 app.get("/checkout", async (req, res) => {
   const { authorization } = req.headers;
