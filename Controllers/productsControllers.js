@@ -1,7 +1,6 @@
 import db from "./../db.js"
 import { ObjectId } from "mongodb";
 
-
 export async function getProducts(req, res) {
     try {
         // Comandos usados para criar o banco de dados de livros
