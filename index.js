@@ -6,23 +6,15 @@ import { v4 as uuid } from 'uuid';
 import joi from "joi";
 import cors from "cors";
 import bcrypt from "bcrypt";
+import db from "./db.js"
+import productsRouter from "./Routes/productsRouters.js"
 
 const app = express();
 app.use(cors());
 app.use(json());
 dotenv.config();
 
-let db = null;
-const mongoClient = new MongoClient(process.env.MONGO_URL)
-
-try {
-  await mongoClient.connect();
-  db = mongoClient.db(process.env.DATABASE);
-  console.log("Sucesso ao conectar MongoDB")
-} catch (error) {
-  console.log("Erro ao conectar MongoDB");
-  console.log("erro", error);
-}
+app.use(productsRouter);
 
 app.post("/cadastrar", async (req, res) => {
 
@@ -124,35 +116,35 @@ app.post("/login", async (req, res) => {
 // ];
 
 
-app.get("/products", async (req, res) => {
-  try {
-    // Comandos usados para criar o banco de dados de livros
-    // livros.forEach(livro => {
-    //   db.collection("livros").insertOne(livro);
-    //   console.log("Salvou o livro no banco");
-    // })
-    // res.send("Livros salvos no banco").status(201);
-    const produtos = await db.collection("livros").find().toArray();
-    res.send(produtos).status(201);
-  }
-  catch (error) {
-    console.log("Erro ao obter os produtos");
-    console.log("erro", error);
-  }
-});
+// app.get("/products", async (req, res) => {
+//   try {
+//     // Comandos usados para criar o banco de dados de livros
+//     // livros.forEach(livro => {
+//     //   db.collection("livros").insertOne(livro);
+//     //   console.log("Salvou o livro no banco");
+//     // })
+//     // res.send("Livros salvos no banco").status(201);
+//     const produtos = await db.collection("livros").find().toArray();
+//     res.send(produtos).status(201);
+//   }
+//   catch (error) {
+//     console.log("Erro ao obter os produtos");
+//     console.log("erro", error);
+//   }
+// });
 
-app.get("/products/:id", async (req, res) => {
-  const { id } = req.params;
-  try {
-    const procuraProduto = await db.collection("livros").findOne({ _id: new ObjectId(id) });
-    if (!procuraProduto) return res.sendStatus(401);
-    else res.send(procuraProduto).status(200);
-  }
-  catch (error) {
-    console.log("Erro ao obter um produto específico");
-    console.log("erro", error);
-  }
-})
+// app.get("/products/:id", async (req, res) => {
+//   const { id } = req.params;
+//   try {
+//     const procuraProduto = await db.collection("livros").findOne({ _id: new ObjectId(id) });
+//     if (!procuraProduto) return res.sendStatus(401);
+//     else res.send(procuraProduto).status(200);
+//   }
+//   catch (error) {
+//     console.log("Erro ao obter um produto específico");
+//     console.log("erro", error);
+//   }
+// })
 
 app.post("/carrinho", async (req, res) => {
   const { title, author, price } = req.body;
