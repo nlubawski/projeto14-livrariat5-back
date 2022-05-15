@@ -1,6 +1,6 @@
 
 import chalk from "chalk";
-import { MongoClient, ObjectId } from "mongodb";
+import { ObjectId } from "mongodb";
 import db from "./../db.js"
 
 export async function postCarrinho(req, res) {
