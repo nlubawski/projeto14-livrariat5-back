@@ -127,7 +127,6 @@ app.post("/carrinho", async (req, res) => {
   }
 });
 
-
 app.get("/carrinho", async (req,res) => {
   const { authorization, id } = req.headers;
   const token = authorization?.replace('Bearer', '').trim();
