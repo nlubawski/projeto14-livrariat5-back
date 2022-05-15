@@ -16,6 +16,13 @@ dotenv.config();
 
 app.use(productsRouter);
 
+// const livros = [
+//   {title: "Os segredos da mente milionária", author:"T.Harv Eker",  price: "R$39,90", id: 1,
+//   description:`Se as suas finanças andam na corda bamba, talvez esteja na hora de você refletir sobre o que T. Harv Eker chama de "o seu modelo de dinheiro" – um conjunto de crenças que cada um de nós alimenta desde a infância e que molda o nosso destino financeiro, quase sempre nos levando para uma situação difícil. Neste livro, Eker mostra como substituir uma mentalidade destrutiva – que você talvez nem perceba que tem – pelos "arquivos de riqueza", 17 modos de pensar e agir que distinguem os ricos das demais pessoas.`,
+//   image: "",
+// },
+// ];
+
 app.post("/cadastrar", async (req, res) => {
 
   const { name, email, password, confirmPassword } = req.body;
@@ -108,53 +115,9 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// const livros = [
-//   {title: "Os segredos da mente milionária", author:"T.Harv Eker",  price: "R$39,90", id: 1,
-//   description:`Se as suas finanças andam na corda bamba, talvez esteja na hora de você refletir sobre o que T. Harv Eker chama de "o seu modelo de dinheiro" – um conjunto de crenças que cada um de nós alimenta desde a infância e que molda o nosso destino financeiro, quase sempre nos levando para uma situação difícil. Neste livro, Eker mostra como substituir uma mentalidade destrutiva – que você talvez nem perceba que tem – pelos "arquivos de riqueza", 17 modos de pensar e agir que distinguem os ricos das demais pessoas.`,
-//   image: "",
-// },
-// ];
-
-
-// app.get("/products", async (req, res) => {
-//   try {
-//     // Comandos usados para criar o banco de dados de livros
-//     // livros.forEach(livro => {
-//     //   db.collection("livros").insertOne(livro);
-//     //   console.log("Salvou o livro no banco");
-//     // })
-//     // res.send("Livros salvos no banco").status(201);
-//     const produtos = await db.collection("livros").find().toArray();
-//     res.send(produtos).status(201);
-//   }
-//   catch (error) {
-//     console.log("Erro ao obter os produtos");
-//     console.log("erro", error);
-//   }
-// });
-
-// app.get("/products/:id", async (req, res) => {
-//   const { id } = req.params;
-//   try {
-//     const procuraProduto = await db.collection("livros").findOne({ _id: new ObjectId(id) });
-//     if (!procuraProduto) return res.sendStatus(401);
-//     else res.send(procuraProduto).status(200);
-//   }
-//   catch (error) {
-//     console.log("Erro ao obter um produto específico");
-//     console.log("erro", error);
-//   }
-// })
-
 app.post("/carrinho", async (req, res) => {
-  const { title, author, price } = req.body;
-  const livroCarrinho = {
-    title,
-    author,
-    price
-  }
   try {
-    await db.collection("carrinho").insertOne(livroCarrinho);
+    await db.collection("carrinho").insertOne(req.body);
     console.log(chalk.bold.blue("Produto salvo no carrinho"));
     res.send("Livro salvo no carrinho").status(201);
   }
@@ -164,17 +127,33 @@ app.post("/carrinho", async (req, res) => {
   }
 });
 
-/* Talvez trocar a rota, pois depois que o carrinho passar pra frente as informações
-o checkout pode criar um novo banco */
 
 app.get("/carrinho", async (req,res) => {
-  // const {id} = req.params;
-  // Receber por params o id do usuário para mostrar apenas seus livros
+  const { authorization, id } = req.headers;
+  const token = authorization?.replace('Bearer', '').trim();
+  // 1a validação: Verifica se o token é válido
+  if (!token) return res.send("Token inexistente").status(401);
+  else console.log("Passou na primeira validação");
   try {
-    // Aqui trocar depois pela coleção do carrinho
-    const livros = await db.collection("carrinho").find().toArray();
+    // 2a validação: Verifica se o token existe na coleção dos tokens
+    const session = await db.collection("sessions").findOne({ token })
+    if (!session) return res.sendStatus(401);
+    else console.log("Passou na segunda validação")
+
+    // 3a validação: Busca os dados do usuário associado ao token na coleção de informações
+    const user = await db.collection("clientes").findOne({ _id: session.clienteId });
+    if (!user) res.sendStatus(404);
+    else {
+      console.log("Passou na terceira validação");
+    }
+    const livros = await db.collection("carrinho").find({ id: id }).toArray();
     res.send(livros).status(200);
   }
+    
+  // const {id} = req.params;
+  // Receber por params o id do usuário para mostrar apenas seus livros
+  // Aqui trocar depois pela coleção do carrinho
+
   catch (error) {
     console.error(error);
     res.status(500).send(chalk.red.bold("Falha na remoção do endereço"))
@@ -189,53 +168,9 @@ app.delete("/carrinho/:id", async (req, res) => {
   }
   catch (error) {
     console.error(error);
-    res.status(500).send(chalk.red.bold("Falha na remoção do endereço"))
+    res.status(500).send(chalk.red.bold("Falha na remoção do livro do carrinho"))
   }
 })
-
-app.get("/carrinho", async (req,res) => {
-  try {
-    const carrinho = await db.collection("carrinho").find().toArray();
-    console.log(chalk.bold.blue("Produtos achados no carrinho"));
-    res.send(carrinho).status(201);
-  }
-  catch (error) {
-    console.log("Erro no get/carrinho");
-    console.log("erro",error);
-  }
-});
-
-app.post("/finalizar", async (req, res) => {
-  const {authorization} = req.headers;
-  const token = authorization?.replace("Bearer", "").trim();
-  const {id} = req.body;
-  console.log(token)  
-  try {
-    const session = await db.collection("sessions").findOne({ token });
-    if (!session) return res.sendStatus(401);
-    else console.log("Passou na segunda validação")
-
-    const cliente = await db.collection("clientes").findOne({id});
-    if(!cliente) return res.status(401).send("Cliente não encontrado");   
-    console.log(cliente)
-
-    const clienteTESTE = await db.collection("clientes").findOne({_id: session.clienteId});
-    const livros = await db.collection("carrinho").find().toArray();
-    const {name, email, _id } = {clienteTESTE};
-    await db.collection("finalizadas").insertOne({
-      name, 
-      email,
-      cliente,
-      livros,      
-    })
-    return res.sendStatus(201);
-    } catch (error) {
-      console.log("Erro ao tentar obter usuário através da sessão");
-      console.log(error);
-      return res.sendStatus(500);
-    }
-
-  })
 
 app.get("/checkout", async (req, res) => {
   const { authorization } = req.headers;
@@ -325,6 +260,38 @@ app.delete("/address/:id", async (req,res) => {
   }
 
 })
+
+app.post("/finalizar", async (req, res) => {
+  const {authorization} = req.headers;
+  const token = authorization?.replace("Bearer", "").trim();
+  const {id} = req.body;
+  console.log(token)  
+  try {
+    const session = await db.collection("sessions").findOne({ token });
+    if (!session) return res.sendStatus(401);
+    else console.log("Passou na segunda validação")
+
+    const cliente = await db.collection("clientes").findOne({id});
+    if(!cliente) return res.status(401).send("Cliente não encontrado");   
+    console.log(cliente)
+
+    const clienteTESTE = await db.collection("clientes").findOne({_id: session.clienteId});
+    const livros = await db.collection("carrinho").find().toArray();
+    const {name, email, _id } = {clienteTESTE};
+    await db.collection("finalizadas").insertOne({
+      name, 
+      email,
+      cliente,
+      livros,      
+    })
+    return res.sendStatus(201);
+    } catch (error) {
+      console.log("Erro ao tentar obter usuário através da sessão");
+      console.log(error);
+      return res.sendStatus(500);
+    }
+
+  })
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
