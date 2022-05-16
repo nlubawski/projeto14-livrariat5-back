@@ -1,32 +1,44 @@
-
 import chalk from "chalk";
 import { ObjectId } from "mongodb";
 import db from "./../db.js"
 
-export async function postCheckout(req, res) {
-  const { authorization } = req.headers;
-  const token = authorization?.replace('Bearer', '').trim();
-  // 1a validação: Verifica se o token é válido
-  if (!token) return res.send("Token inexistente").status(401);
-  else console.log("Passou na primeira validação");
+export async function getCheckout(req, res) {
+  const { user } = res.locals
   try {
-    // 2a validação: Verifica se o token existe na coleção dos tokens
-    const session = await db.collection("sessions").findOne({ token })
-    if (!session) return res.sendStatus(401);
-    else console.log("Passou na segunda validação")
-
-    // 3a validação: Busca os dados do usuário associado ao token na coleção de informações
-    const user = await db.collection("clientes").findOne({ _id: session.clienteId });
-    if (!user) res.sendStatus(404);
-    else {
-      console.log("Passou na terceira validação");
       return res.send(user).status(200);
-    }
-    // const registro = await db.collection("clientes").find({ name: user.nome }).toArray();
   }
-
   catch (error) {
-    console.error(error);
-    res.status(500).send(chalk.red.bold("Falha na verificação do token"))
+      console.error(error);
+      res.status(500).send(chalk.red.bold("Falha no cadastro de usuário novo"))
   }
+}
+
+export async function postCheckout(req, res) {
+  const {nome, email, address, payment, id} = req.body
+  console.log(req.body);
+  try {
+    const livros = await db.collection("carrinho").find({ id: id }).toArray();
+  
+    const endereço = await db.collection("enderecos").find({ _id: new ObjectId(address)}).toArray();
+    const pagamento = await db.collection("pagamentos").find({ id: payment }).toArray();
+
+    await db.collection("finalizadas").insertOne({
+      nome,
+      email,
+      destinatario: endereço[0].destinatario,
+      rua: endereço[0].rua,
+      bairro: endereço[0].bairro,
+      cep: endereço[0].cep,
+      pagamento: pagamento[0].opcao,
+      livros,
+    })
+
+    await db.collection("carrinho").deleteMany({id:id});
+    // await db.collection("carrinho").deleteOne({ _id: new ObjectId(id) })
+
+    res.send("post feito com sucesso").status(201);
+    } catch (error) {
+      console.log("Erro ao tentar obter usuário através da sessão");
+      return res.sendStatus(500);
+    }
 }
