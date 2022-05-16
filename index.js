@@ -189,7 +189,6 @@ app.post("/finalizar", async (req, res) => {
       console.log(error);
       return res.sendStatus(500);
     }
-
   })
 
 app.get("/finalizar", async (req,res) => {
