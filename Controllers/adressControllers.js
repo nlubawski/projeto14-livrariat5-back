@@ -48,5 +48,4 @@ export async function deleteAdress(req, res) {
     console.error(error);
     res.status(500).send(chalk.red.bold("Falha na remoção do endereço"))
   }
-
 }

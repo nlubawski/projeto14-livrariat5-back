@@ -34,7 +34,6 @@ export async function postCheckout(req, res) {
     })
 
     await db.collection("carrinho").deleteMany({id:id});
-    // await db.collection("carrinho").deleteOne({ _id: new ObjectId(id) })
 
     res.send("post feito com sucesso").status(201);
     } catch (error) {
