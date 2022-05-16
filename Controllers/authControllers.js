@@ -1,4 +1,3 @@
-
 import joi from "joi";
 import db from "./../db.js"
 import bcrypt from "bcrypt";
@@ -20,7 +19,6 @@ export async function postLogin(req, res) {
 
   } catch (error) {
     res.status(422).send("deu erro");
-    //return;
   }
 
   try {
@@ -61,7 +59,6 @@ export async function postCadastrar(req, res) {
   
     } catch (error) {
       res.status(422).send("deu erro");
-      //return;
     }
   
     try {
