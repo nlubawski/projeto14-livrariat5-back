@@ -24,38 +24,71 @@ app.use(carrinhoRouters)
 app.use(adressRouters)
 app.use(checkoutRouters)
 
-
-app.post("/finalizar", async (req, res) => {
-  const {authorization} = req.headers;
-  const token = authorization?.replace("Bearer", "").trim();
-  const {id} = req.body;
-  console.log(token)  
+app.get("/checkout", async (req, res) => {
+  const { authorization } = req.headers;
+  const token = authorization?.replace('Bearer', '').trim();
+  // 1a validação: Verifica se o token é válido
+  if (!token) return res.send("Token inexistente").status(401);
+  else console.log("Passou na primeira validação");
   try {
-    const session = await db.collection("sessions").findOne({ token });
+    // 2a validação: Verifica se o token existe na coleção dos tokens
+    const session = await db.collection("sessions").findOne({ token })
     if (!session) return res.sendStatus(401);
     else console.log("Passou na segunda validação")
 
-    const cliente = await db.collection("clientes").findOne({id});
-    if(!cliente) return res.status(401).send("Cliente não encontrado");   
-    console.log(cliente)
+    // 3a validação: Busca os dados do usuário associado ao token na coleção de informações
+    const user = await db.collection("clientes").findOne({ _id: session.clienteId });
+    if (!user) res.sendStatus(404);
+    else {
+      console.log("Passou na terceira validação");
+      return res.send(user).status(200);
+    }
+  }
 
-    const clienteTESTE = await db.collection("clientes").findOne({_id: session.clienteId});
-    const livros = await db.collection("carrinho").find().toArray();
-    const {name, email, _id } = {clienteTESTE};
+  catch (error) {
+    console.error(error);
+    res.status(500).send(chalk.red.bold("Falha na verificação do token"))
+  }
+});
+
+app.post("/finalizar", async (req, res) => {
+  const {nome, email, address, payment, id} = req.body
+  try {
+    const livros = await db.collection("carrinho").find({ id: id }).toArray();
+   
+    const endereço = await db.collection("enderecos").find({ _id: new ObjectId(address)}).toArray();
+    const pagamento = await db.collection("pagamentos").find({ id: payment }).toArray();
+
     await db.collection("finalizadas").insertOne({
-      name, 
+      nome,
       email,
-      cliente,
-      livros,      
+      destinatario: endereço[0].destinatario,
+      rua: endereço[0].rua,
+      bairro: endereço[0].bairro,
+      cep: endereço[0].cep,
+      pagamento: pagamento[0].opcao,
+      livros,
     })
-    return res.sendStatus(201);
+
+    res.send("post feito com sucesso").status(201);
     } catch (error) {
       console.log("Erro ao tentar obter usuário através da sessão");
       console.log(error);
       return res.sendStatus(500);
     }
-
   })
+
+app.get("/finalizar", async (req,res) => {
+  try {
+    const ultimo = await db.collection("finalizadas").find({}).sort({_id:-1}).limit(1).toArray();
+    res.send(ultimo).status(200);
+  } catch (error) {
+    console.log("Erro ao tentar obter usuário através da sessão");
+    console.log(error);
+    return res.sendStatus(500);
+  }
+})
+  
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => {

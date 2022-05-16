@@ -15,6 +15,7 @@ export async function postCarrinho(req, res) {
 
 export async function getCarrinho(req, res) {
     const { authorization, id } = req.headers;
+    // console.log(id);
     const token = authorization?.replace('Bearer', '').trim();
     // 1a validação: Verifica se o token é válido
     if (!token) return res.send("Token inexistente").status(401);
@@ -24,8 +25,9 @@ export async function getCarrinho(req, res) {
       if (!session) return res.sendStatus(401);
       // 3a validação: Busca os dados do usuário associado ao token na coleção de informações
       const user = await db.collection("clientes").findOne({ _id: session.clienteId });
-      if (!user) res.sendStatus(404);
-      const livros = await db.collection("carrinho").find({ id: id }).toArray();
+    //   if (!user) res.sendStatus(404);
+      const livros = await db.collection("carrinho").find({id: id}).toArray();
+      console.log(livros);
       res.send(livros).status(200);
     }
       
@@ -35,7 +37,7 @@ export async function getCarrinho(req, res) {
   
     catch (error) {
       console.error(error);
-      res.status(500).send(chalk.red.bold("Falha na remoção do endereço"))
+      res.status(500).send(chalk.red.bold("Falha em mostrar o carrinho"))
     }
   }
 
