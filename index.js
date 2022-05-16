@@ -52,7 +52,7 @@ app.get("/carrinho", async (req,res) => {
     const livros = await db.collection("carrinho").find({ id: id }).toArray();
     res.send(livros).status(200);
   }
-    
+
   // const {id} = req.params;
   // Receber por params o id do usuário para mostrar apenas seus livros
   // Aqui trocar depois pela coleção do carrinho
@@ -143,12 +143,12 @@ app.get("/address", async (req,res) => {
     console.error(error);
     res.status(500).send(chalk.red.bold("Falha na obtenção dos endereços"))
   }
-  
+
 })
 
 app.delete("/address/:id", async (req,res) => {
   /* No front end, ele passa o id do endereço clicado pela rota, dai nessa parte do back
-  ele recebe o id pelo req.params, e eu uso esse id pra deletar o item que eu quero 
+  ele recebe o id pelo req.params, e eu uso esse id pra deletar o item que eu quero
   do banco de dados.
   Pra deletar itens do carrinho é o mesmo princípio, vc precisa mandar pelo front
    o id gerado pelo mongodb pro seu app.delete. */
@@ -165,29 +165,25 @@ app.delete("/address/:id", async (req,res) => {
 })
 
 app.post("/finalizar", async (req, res) => {
-  const {authorization} = req.headers;
-  const token = authorization?.replace("Bearer", "").trim();
-  const {id} = req.body;
-  console.log(token)  
+  const {nome, email, address, payment, id} = req.body
   try {
-    const session = await db.collection("sessions").findOne({ token });
-    if (!session) return res.sendStatus(401);
-    else console.log("Passou na segunda validação")
+    const livros = await db.collection("carrinho").find({ id: id }).toArray();
+   
+    const endereço = await db.collection("enderecos").find({ _id: new ObjectId(address)}).toArray();
+    const pagamento = await db.collection("pagamentos").find({ id: payment }).toArray();
 
-    const cliente = await db.collection("clientes").findOne({id});
-    if(!cliente) return res.status(401).send("Cliente não encontrado");   
-    console.log(cliente)
-
-    const clienteTESTE = await db.collection("clientes").findOne({_id: session.clienteId});
-    const livros = await db.collection("carrinho").find().toArray();
-    const {name, email, _id } = {clienteTESTE};
     await db.collection("finalizadas").insertOne({
-      name, 
+      nome,
       email,
-      cliente,
-      livros,      
+      destinatario: endereço[0].destinatario,
+      rua: endereço[0].rua,
+      bairro: endereço[0].bairro,
+      cep: endereço[0].cep,
+      pagamento: pagamento[0].opcao,
+      livros,
     })
-    return res.sendStatus(201);
+
+    res.send("post feito com sucesso").status(201);
     } catch (error) {
       console.log("Erro ao tentar obter usuário através da sessão");
       console.log(error);
@@ -195,6 +191,18 @@ app.post("/finalizar", async (req, res) => {
     }
 
   })
+
+app.get("/finalizar", async (req,res) => {
+  try {
+    const ultimo = await db.collection("finalizadas").find({}).sort({_id:-1}).limit(1).toArray();
+    res.send(ultimo).status(200);
+  } catch (error) {
+    console.log("Erro ao tentar obter usuário através da sessão");
+    console.log(error);
+    return res.sendStatus(500);
+  }
+})
+  
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
